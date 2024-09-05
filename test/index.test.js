@@ -17,7 +17,7 @@ test('index', () => new Promise((resolve, reject) => {
       resolve();
     });
     cli.on('error', reject);
-    const req = Buffer.from('001a1c9e010000010000000000000469657466036f72670000010001', 'hex')
+    const req = Buffer.from('001a1c9e010000010000000000000469657466036f72670000010001', 'hex');
     cli.end(req);
   });
 }));
