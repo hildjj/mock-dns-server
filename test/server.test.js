@@ -37,7 +37,7 @@ test('server', async() => {
   cli.write(packet.streamEncode(query));
   const sz = (await nof.readFull(2)).readUint16BE();
   const dresp = packet.decode(await nof.readFull(sz));
-  equal(dresp.id, 17);
+  equal(dresp.id, 17, 'packet ID');
   like(dresp.answers[0], {
     data: '104.16.44.99',
     name: 'ietf.org',
