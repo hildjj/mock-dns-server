@@ -1,10 +1,14 @@
 {
   "name": "mock-dns-server",
   "version": "0.0.1",
-  "decription": "",
-  "main": "index.js",
+  "decription": "Mock DNS-over-TLS server which doesn't use OS sockets",
+  "main": "lib/index.js",
   "type": "module",
-  "keywords": [],
+  "keywords": [
+    "dns",
+    "tls",
+    "dns-over-tls"
+  ],
   "author": "Joe Hildebrand <joe-github@cursive.net>",
   "license": "MIT",
   "repository": {
