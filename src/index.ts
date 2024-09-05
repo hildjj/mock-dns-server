@@ -6,6 +6,7 @@ import {MockTLSServer, type ServerOpts} from 'mock-tls-server';
 import type {Buffer} from 'node:buffer';
 import {NoFilter} from 'nofilter';
 import type {TLSSocket} from 'node:tls';
+import assert from 'node:assert';
 
 export {connect, plainConnect} from 'mock-tls-server';
 
@@ -110,37 +111,29 @@ class Connection {
       const buf = this.#nof.read(this.#size) as Buffer;
       this.#size = -1;
       const pkt = packet.decode(buf);
+      let chunky = false;
+      assert(pkt.id !== undefined);
+      assert(pkt.questions);
 
-      if (!pkt.questions?.length || (pkt.id === undefined)) {
-        // NO QUESTIONS
-        throw new Error('REPLACE THIS WITH RETURN NXD');
-      }
+      const rp: packet.Packet = {
+        id: pkt.id,
+        type: 'response',
+        flags: AA,
+        questions: pkt.questions,
+        answers: [],
+      };
 
-      const [{name, type}] = pkt.questions;
-      const domain = this.zones[name];
-      const id = /badid/i.test(name) ? (pkt.id + 1) % 65536 : pkt.id;
+      for (const {name, type} of pkt.questions) {
+        if (/badid/i.test(name)) {
+          rp.id = (pkt.id + 1) % 65536;
+        }
+        if (/chunky/.test(name)) {
+          chunky = true;
+        }
 
-      if (domain) {
-        const data = [domain[type]].flat();
-        if (data) {
-          const rp: packet.Packet = {
-            id,
-            type: 'response',
-            flags: AA,
-            questions: pkt.questions,
-            answers: [
-            ],
-            additionals: [{
-              name: '.',
-              type: 'OPT',
-              udpPayloadSize: 4096,
-              flags: 0,
-              options: [],
-              ednsVersion: 0,
-              extendedRcode: 0,
-              flag_do: false,
-            }],
-          };
+        const domain = this.zones[name];
+        if (domain) {
+          const data = [domain[type]].flat();
           for (const d of data) {
             const ans = {
               name,
@@ -151,43 +144,47 @@ class Connection {
             } as packet.Answer;
             rp.answers?.push(ans);
           }
-
-          // Only pad if client said they support EDNS0
-          if (pkt.additionals?.find(a => a.type === 'OPT')) {
-            const unpadded = packet.encodingLength(rp);
-            const opt = rp.additionals?.[0] as packet.OptAnswer;
-            opt.options.push({
-              code: 12, // PADDING
-              length: (Math.ceil(unpadded / PAD_SIZE) * PAD_SIZE) -
-                unpadded - 4,
-            });
-          }
-
-          const reply = packet.streamEncode(rp);
-          if (/chunky/.test(name)) {
-            // Write in chunks, for testing reassembly
-            // Avoid Nagle by going full-sync
-            this.#sock.write(reply.subarray(0, 1), () => {
-              this.#sock.write(reply.subarray(1, 2), () => {
-                this.#sock.write(reply.subarray(2, 7), () => {
-                  this.#sock.write(reply.subarray(7));
-                });
-              });
-            });
-          } else {
-            this.#sock.write(reply);
-          }
-          return;
         }
       }
 
-      // Not found
-      this.#sock.write(packet.streamEncode({
-        id,
-        type: 'response',
-        flags: AA | rcodes.toRcode('NXDOMAIN'),
-        questions: pkt.questions,
-      }));
+      if (!rp.answers?.length) {
+        rp.flags = AA | rcodes.toRcode('NXDOMAIN');
+      }
+
+      // Only pad if client said they support EDNS0
+      if (pkt.additionals?.find(a => a.type === 'OPT')) {
+        const unpadded = packet.encodingLength(rp);
+        const opt: packet.OptAnswer = {
+          name: '.',
+          type: 'OPT',
+          udpPayloadSize: 4096,
+          flags: 0,
+          options: [{
+            code: 12, // PADDING
+            length: (Math.ceil(unpadded / PAD_SIZE) * PAD_SIZE) -
+              unpadded - 4,
+          }],
+          ednsVersion: 0,
+          extendedRcode: 0,
+          flag_do: false,
+        };
+        rp.additionals = [opt];
+      }
+
+      const reply = packet.streamEncode(rp);
+      if (chunky) {
+        // Write in chunks, for testing reassembly
+        // Avoid Nagle by going full-sync
+        this.#sock.write(reply.subarray(0, 1), () => {
+          this.#sock.write(reply.subarray(1, 2), () => {
+            this.#sock.write(reply.subarray(2, 7), () => {
+              this.#sock.write(reply.subarray(7));
+            });
+          });
+        });
+      } else {
+        this.#sock.write(reply);
+      }
     }
   }
 }
