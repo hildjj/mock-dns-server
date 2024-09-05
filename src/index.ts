@@ -10,7 +10,12 @@ import assert from 'node:assert';
 
 export {connect, plainConnect} from 'mock-tls-server';
 
-const PAD_SIZE = 468; // See RFC 8467
+// See RFC 8467:
+// (2)  If a server receives a query that includes the EDNS(0) "Padding"
+// option, it MUST pad the corresponding response (see Section 4 of RFC 7830)
+// and SHOULD pad the corresponding response to a multiple of 468 octets (see
+// below).
+const PAD_SIZE = 468;
 const AA = 1 << 10;
 const CONNECTION = Symbol('connection');
 
@@ -121,6 +126,8 @@ class Connection {
         flags: AA,
         questions: pkt.questions,
         answers: [],
+        additionals: [],
+        authorities: [],
       };
 
       for (const {name, type} of pkt.questions) {
@@ -151,24 +158,27 @@ class Connection {
         rp.flags = AA | rcodes.toRcode('NXDOMAIN');
       }
 
-      // Only pad if client said they support EDNS0
-      if (pkt.additionals?.find(a => a.type === 'OPT')) {
-        const unpadded = packet.encodingLength(rp);
-        const opt: packet.OptAnswer = {
+      // Only pad if client said they support EDNS0 and request padding
+      const opt = pkt.additionals?.find(a => a.type === 'OPT');
+      if (opt?.options?.find(o => o.type === 'PADDING')) {
+        const padding: packet.PacketOpt = {
+          code: 12, // 'PADDING'
+          length: 0,
+        };
+
+        rp.additionals?.push({
           name: '.',
           type: 'OPT',
           udpPayloadSize: 4096,
           flags: 0,
-          options: [{
-            code: 12, // PADDING
-            length: (Math.ceil(unpadded / PAD_SIZE) * PAD_SIZE) -
-              unpadded - 4,
-          }],
+          options: [padding],
           ednsVersion: 0,
           extendedRcode: 0,
           flag_do: false,
-        };
-        rp.additionals = [opt];
+        });
+        const unpadded = packet.encodingLength(rp);
+        padding.length =
+          (Math.ceil(unpadded / PAD_SIZE) * PAD_SIZE) - unpadded;
       }
 
       const reply = packet.streamEncode(rp);

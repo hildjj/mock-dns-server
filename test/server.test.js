@@ -15,9 +15,20 @@ function like(actual, expected, message) {
   }
 }
 
-test('server', async() => {
-  const server = createServer({zones: DNS});
+let server = null;
+test.before(() => {
+  server = createServer({zones: DNS});
   ok(server);
+});
+
+test.after(async() => {
+  server.close();
+  await pEvent(server, 'close');
+  // eslint-disable-next-line require-atomic-updates
+  server = null;
+});
+
+test('server', async() => {
   const cli = connect(server.port);
   ok(cli);
   await pEvent(cli, 'secure');
@@ -48,7 +59,6 @@ test('server', async() => {
   query.additionals = [{
     name: '.',
     type: 'OPT',
-    // @ts-ignore TS2339: types not up to date
     udpPayloadSize: 4096,
     flags: 0,
     options: [{
@@ -67,13 +77,14 @@ test('server', async() => {
     });
   });
   const sz2 = (await nof.readFull(2)).readUint16BE();
-  const dresp2 = packet.decode(await nof.readFull(sz2));
-  ok(dresp2);
+  const buf2 = await nof.readFull(sz2);
+  const dresp2 = packet.decode(buf2);
   like(dresp2.answers[0], {
     data: '192.168.1.1',
     name: 'chunky.example',
     type: 'A',
   }, 'response 2');
+  equal(buf2.length, 468); // See RFC 8467
 
   query.questions[0].name = 'badid.example';
   cli.write(packet.streamEncode(query));
@@ -88,7 +99,4 @@ test('server', async() => {
   equal(dresp4.rcode, 'NXDOMAIN');
   cli.end();
   await pEvent(cli, 'end');
-
-  server.close();
-  await pEvent(server, 'close');
 });
