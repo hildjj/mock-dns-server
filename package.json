@@ -19,22 +19,28 @@
     "clean": "rimraf coverage docs lib",
     "lint": "eslint .",
     "pretest": "tsc --inlineSourceMap",
-    "test": "c8 node --test",
+    "test": "c8 node --test test/*.test.js",
     "posttest": "npm run ts",
     "docs": "typedoc",
     "ts": "tsc",
     "build": "npm run test && npm run lint && npm run docs && npm pack --dry-run"
   },
   "devDependencies": {
+    "@types/dns-packet": "5.6.5",
+    "@types/node": "22.5.3",
     "c8": "10.1.2",
     "eslint-plugin-jsdoc": "50.2.2",
     "eslint-plugin-markdown": "5.1.0",
+    "p-event": "6.0.1",
     "rimraf": "6.0.1",
     "typedoc": "0.26.6",
     "typescript": "5.5.4"
   },
   "dependencies": {
     "@cto.af/eslint-config": "4.1.6",
+    "dns-packet": "5.6.1",
+    "mock-tls-server": "1.0.1",
+    "nofilter": "5.0.0",
     "typescript-eslint": "8.4.0"
   },
   "packageManager": "pnpm@9.9.0",
