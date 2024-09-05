@@ -19,4 +19,10 @@ export default [
   ...jsdoc,
   ...jts,
   ...markdown,
+  {
+    files: ['README.md/*.js'],
+    rules: {
+      'jsdoc/imports-as-dependencies': 'off',
+    },
+  },
 ];
