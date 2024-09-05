@@ -1,6 +1,6 @@
 {
   "name": "mock-dns-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "decription": "Mock DNS-over-TLS server which doesn't use OS sockets",
   "main": "lib/index.js",
   "type": "module",
