@@ -4,7 +4,6 @@ import {equal, notEqual, ok} from 'node:assert/strict';
 import {DNS} from './zone.js';
 import {NoFilter} from 'nofilter';
 import {pEvent} from 'p-event';
-// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import test from 'node:test';
 
 function like(actual, expected, message) {
@@ -21,14 +20,14 @@ test.before(() => {
   ok(server);
 });
 
-test.after(async() => {
+test.after(async () => {
   server.close();
   await pEvent(server, 'close');
   // eslint-disable-next-line require-atomic-updates
   server = null;
 });
 
-test('server', async() => {
+test('server', async () => {
   const cli = connect(server.port);
   ok(cli);
   await pEvent(cli, 'secure');

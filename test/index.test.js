@@ -3,7 +3,6 @@ import {DNS} from './zone.js';
 import assert from 'node:assert';
 import {connect} from 'mock-tls-server';
 import {createServer} from '../lib/index.js';
-// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import test from 'node:test';
 
 test('index', () => new Promise((resolve, reject) => {

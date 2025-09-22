@@ -1,6 +1,5 @@
 import * as packet from 'dns-packet';
 // @ts-expect-error Incomplete types
-// eslint-disable-next-line n/no-missing-import
 import * as rcodes from 'dns-packet/rcodes.js';
 import {MockTLSServer, type ServerOpts} from 'mock-tls-server';
 import type {Buffer} from 'node:buffer';
