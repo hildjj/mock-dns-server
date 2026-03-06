@@ -1,6 +1,5 @@
-/**
- * @type {import('../lib/index.js').Zones}
- */
+/** @import {Zones} from '../lib/index.js' */
+/** @type {Zones} */
 export const DNS = {
   'ietf.org': {
     A: ['104.16.44.99', '104.16.45.99'],

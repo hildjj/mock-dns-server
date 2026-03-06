@@ -18,7 +18,10 @@ Example:
 ```js
 import {connect, createServer} from 'mock-dns-server';
 
-/** @type {import('mock-dns-server').Zones} */
+/** @import {Zones} from 'moch-dns-server' */
+/** @import {TLSSocket} from 'node:tls' */
+
+/** @type {Zones} */
 const zones = {
   'xmpp.example.com': {
     A: ['192.168.1.2', '192.168.1.3'],
@@ -34,7 +37,7 @@ const zones = {
 };
 const server = createServer({zones});
 
-/** @type {import('node:tls').TLSSocket} */
+/** @type {TLSSocket} */
 const sock = connect(server.port);
 ```
 
