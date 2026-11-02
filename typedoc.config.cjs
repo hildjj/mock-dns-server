@@ -6,9 +6,10 @@ module.exports = {
   entryPoints: ['src/index.ts'],
   out: 'docs',
   cleanOutputDir: true,
+  includeVersion: true,
   sidebarLinks: {
-    GitHub: 'https://github.com/hildjj/foo/',
-    Documentation: 'http://hildjj.github.io/foo/',
+    GitHub: 'https://github.com/hildjj//workspaces/mock-dns-server/',
+    Documentation: 'http://hildjj.github.io//workspaces/mock-dns-server/',
   },
   navigation: {
     includeCategories: false,
@@ -16,5 +17,4 @@ module.exports = {
   },
   categorizeByGroup: false,
   sort: ['static-first', 'alphabetical'],
-  exclude: ['**/*.spec.ts'],
 };

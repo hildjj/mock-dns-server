@@ -35,7 +35,7 @@ const zones = {
     },
   },
 };
-const server = createServer({zones});
+const server = await createServer({zones});
 
 /** @type {TLSSocket} */
 const sock = connect(server.port);

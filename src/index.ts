@@ -5,7 +5,7 @@ import {MockTLSServer, type ServerOpts} from 'mock-tls-server';
 import type {Buffer} from 'node:buffer';
 import {NoFilter} from 'nofilter';
 import type {TLSSocket} from 'node:tls';
-import assert from 'node:assert';
+import assert from 'node:assert/strict';
 
 export {connect, plainConnect} from 'mock-tls-server';
 
@@ -107,7 +107,7 @@ class Connection {
         if (this.#nof.length < 2) {
           return;
         }
-        this.#size = this.#nof.readUInt16BE();
+        this.#size = this.#nof.readUInt16BE() ?? 0;
       }
       if (this.#nof.length < this.#size) {
         return;
@@ -205,12 +205,12 @@ class Connection {
  *   to 853.
  * @returns The created server, already listening.
  */
-export function createServer(
+export async function createServer(
   options: MockDNSServerOptions & ServerOpts = {}
-): MockTLSServer {
+): Promise<MockTLSServer> {
   const {port = 853, zones = {}, ...opts} = options;
   const server = new MockTLSServer(opts);
-  server.listen(port, (cli: TLSSocket) => {
+  await server.listen(port, (cli: TLSSocket) => {
     // @ts-expect-error Lifetime of server tied to client
     cli[CONNECTION] = new Connection(cli, {zones});
   });
