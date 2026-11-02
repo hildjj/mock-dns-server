@@ -15,8 +15,8 @@ function like(actual, expected, message) {
 }
 
 let server = null;
-test.before(() => {
-  server = createServer({zones: DNS});
+test.before(async () => {
+  server = await createServer({zones: DNS});
   ok(server);
 });
 
