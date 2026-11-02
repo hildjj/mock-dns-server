@@ -107,7 +107,9 @@ class Connection {
         if (this.#nof.length < 2) {
           return;
         }
-        this.#size = this.#nof.readUInt16BE() ?? 0;
+        const sz = this.#nof.readUInt16BE();
+        assert(typeof sz === 'number', 'Invalid state: not enough data');
+        this.#size = sz;
       }
       if (this.#nof.length < this.#size) {
         return;
